@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Registro de brigadas</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1B2A2F">
+<style>
+:root{--bg:#EEF1F0;--ink:#1B2A2F;--ac:#0F6B7A;--av:#B4451F;--ln:#C9D2D0}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--ink);color:#fff;padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+header h1{font-size:17px;margin:0;flex:1;min-width:150px}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+main{max-width:820px;margin:0 auto;padding:14px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:#fff;border:1px solid var(--ln);border-radius:6px;padding:7px 12px;cursor:pointer}
+button.p,nav button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+header button{background:transparent;color:#fff;border-color:#ffffff55}
+input,select,textarea{border:1px solid var(--ln);border-radius:6px;padding:8px;background:#fff;width:100%}
+:focus-visible{outline:3px solid #E0A526;outline-offset:1px}
+.bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:14px;align-items:center}
+.c{background:#fff;border-left:6px solid var(--ac);border-radius:6px;padding:10px 14px;margin-bottom:10px}
+.c.averia{border-left-color:var(--av)}
+.c .t{display:flex;gap:10px;flex-wrap:wrap;font-size:14px}
+.c .t b{font-size:16px}
+.c p{margin:6px 0;white-space:pre-wrap}
+.m{font-size:13px;color:#4C5E64}
+.pend{color:var(--av);font-weight:600}
+.vac{padding:30px 10px;text-align:center;color:#4C5E64}
+.c .a{display:flex;gap:6px;margin-top:6px}
+.c .a button{padding:4px 10px;font-size:14px}
+#login{max-width:340px;margin:12vh auto;padding:0 16px}
+#login form,dialog form{display:grid;gap:10px}
+dialog{width:min(520px,94vw);border:0;border-radius:8px;padding:18px}
+label{display:grid;gap:3px;font-size:14px}
+h2{margin:18px 0 8px;font-size:18px}
+ul{padding-left:18px}li{margin:4px 0}
+#rout{background:#fff;padding:16px;margin-top:12px}
+.ri{border-top:1px solid var(--ln);padding:6px 0}
+[hidden]{display:none!important}
+@media print{.noprint,header{display:none!important}body{background:#fff}#rout{padding:0;margin:0}}
+</style>
+</head>
+<body>
+<div id="login" hidden>
+  <h1>Registro de brigadas</h1>
+  <form id="fl">
+    <label>Correo<input id="lu" type="email" autocomplete="username" required></label>
+    <label>Contraseña<input id="lp" type="password" autocomplete="current-password" required></label>
+    <button class="p">Entrar</button>
+    <small>La primera vez necesitas conexión a internet.</small>
+  </form>
+</div>
+
+<div id="app" hidden>
+<header>
+  <h1>Registro de brigadas</h1>
+  <span id="est" class="m" style="color:#fff"></span>
+  <nav id="nav"></nav>
+  <button id="salir">Salir</button>
+</header>
+<main>
+  <section id="v-lista">
+    <div class="bar noprint">
+      <input id="q" type="search" placeholder="Buscar en las descripciones">
+      <select id="fi" title="Institución"></select>
+      <input id="fm" type="month" title="Mes">
+      <select id="ft" title="Tipo"><option value="">Todos los tipos</option><option value="mantenimiento">Mantenimiento</option><option value="averia">Avería</option></select>
+      <label id="lel" hidden style="grid-auto-flow:column;justify-content:start;align-items:center"><input id="fe" type="checkbox" style="width:auto"> Ver eliminados</label>
+      <button id="nuevo" class="p">Nuevo informe</button>
+      <button id="ejs">Exportar JSON</button>
+      <button id="ecsv">Exportar CSV</button>
+    </div>
+    <div id="lista"></div>
+  </section>
+
+  <section id="v-rep" hidden>
+    <div class="bar noprint">
+      <select id="ri"></select>
+      <input id="rm" type="month">
+      <button id="gen" class="p">Generar informe</button>
+      <button id="imp" hidden>Imprimir o guardar PDF</button>
+    </div>
+    <div id="rout"></div>
+  </section>
+
+  <section id="v-cfg" hidden>
+    <h2>Instituciones</h2>
+    <div class="bar"><input id="ni" placeholder="Nombre de la institución"><button data-a="ai">Añadir institución</button></div>
+    <ul id="linst"></ul>
+    <h2>Meses cerrados</h2>
+    <div class="bar"><input id="cmes" type="month"><button data-a="cm">Cerrar mes</button></div>
+    <ul id="lmes"></ul>
+    <h2>Usuarios</h2>
+    <div class="bar">
+      <input id="un" placeholder="Nombre"><input id="ue" type="email" placeholder="Correo">
+      <input id="up" type="text" placeholder="Contraseña inicial (mín. 8)">
+      <label style="grid-auto-flow:column;justify-content:start;align-items:center"><input id="ua" type="checkbox" style="width:auto"> Administrador</label>
+      <button data-a="cu">Crear usuario</button>
+    </div>
+    <ul id="lusu"></ul>
+    <h2>Importar copia</h2>
+    <p class="m">Carga un archivo JSON exportado antes. Los informes con el mismo identificador se actualizan.</p>
+    <input id="imf" type="file" accept=".json">
+  </section>
+</main>
+</div>
+
+<dialog id="dlg">
+  <form id="ff" method="dialog">
+    <input id="fid" type="hidden">
+    <label>Fecha<input id="ffe" type="date" required></label>
+    <label>Institución<select id="fin" required></select></label>
+    <label>Tipo<select id="fti"><option value="mantenimiento">Mantenimiento</option><option value="averia">Avería</option></select></label>
+    <label>Colaboradores (podrán editar este informe)<select id="fco" multiple size="5"></select></label>
+    <label>Descripción del trabajo<textarea id="fde" rows="6" required></textarea></label>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button type="button" id="fcan">Cancelar</button><button class="p">Guardar informe</button>
+    </div>
+  </form>
+</dialog>
+<dialog id="dh"><div id="hh"></div><p style="text-align:right"><button onclick="$('#dh').close()">Cerrar</button></p></dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+const SB_URL='https://dejhncumxioedyndueyv.supabase.co', SB_KEY='sb_publishable_jEzsSaguJSUHYZ7Qjpz9Lw_g7u6mHBl';
+const sb=supabase.createClient(SB_URL,SB_KEY);
+const $=s=>document.querySelector(s);
+const esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const J=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
+const S={uid:null,me:null,per:[],ins:[],cer:[],inf:[],cola:J('cola',[])};
+const nom=id=>S.per.find(p=>p.id===id)?.nombre||'—';
+const inom=id=>S.ins.find(i=>i.id===id)?.nombre||'—';
+const cerrado=f=>S.cer.includes(f.slice(0,7)+'-01');
+const puede=r=>S.me&&(S.me.es_admin||(!cerrado(r.fecha)&&(r.autor===S.me.id||r.colaboradores.includes(S.me.id))));
+const guardaCola=()=>localStorage.setItem('cola',JSON.stringify(S.cola));
+const tipoTxt=t=>t==='averia'?'Avería':'Mantenimiento';
+
+// ---------- Sincronización ----------
+async function upd(r){
+  const {id,autor,...c}=r;
+  const {data,error}=await sb.from('informes').update(c).eq('id',id).select('id');
+  return {error:error||(data.length?null:{code:'x',message:'No tienes permiso para editar este informe'})};
+}
+async function sync(){
+  if(!navigator.onLine)return;
+  while(S.cola.length){
+    const {op,row}=S.cola[0];let e;
+    if(op==='ins'){({error:e}=await sb.from('informes').insert(row));if(e?.code==='23505')({error:e}=await upd(row))}
+    else({error:e}=await upd(row));
+    if(e&&!e.code)break;                       // sin red: se reintenta luego
+    if(e)alert('No se pudo guardar un cambio: '+e.message);
+    S.cola.shift();guardaCola();
+  }
+}
+async function cargar(){
+  try{
+    await sync();
+    const rs=await Promise.all([
+      sb.from('profiles').select('*').order('nombre'),
+      sb.from('instituciones').select('*').order('nombre'),
+      sb.from('meses_cerrados').select('mes'),
+      sb.from('informes').select('*').order('fecha',{ascending:false})]);
+    if(rs.some(x=>x.error))throw 0;
+    S.per=rs[0].data;S.ins=rs[1].data;S.cer=rs[2].data.map(x=>x.mes);S.inf=rs[3].data;
+    localStorage.setItem('cache',JSON.stringify({per:S.per,ins:S.ins,cer:S.cer,inf:S.inf}));
+  }catch{Object.assign(S,J('cache',{}))}
+  for(const {row} of S.cola){const k=S.inf.findIndex(x=>x.id===row.id);k<0?S.inf.unshift(row):S.inf[k]={...S.inf[k],...row}}
+  S.me=S.per.find(p=>p.id===S.uid)||null;
+  pintar();
+}
+function guardar(row,nuevo){
+  const k=S.inf.findIndex(x=>x.id===row.id);
+  k<0?S.inf.unshift(row):S.inf[k]={...S.inf[k],...row};
+  const q=S.cola.find(c=>c.row.id===row.id);
+  if(q)q.row=row;else S.cola.push({op:nuevo?'ins':'upd',row});
+  guardaCola();lista();cargar();
+}
+
+// ---------- Pantallas ----------
+function pintar(){
+  const adm=S.me?.es_admin;
+  $('#est').textContent=(navigator.onLine?'':'Sin conexión. ')+(S.cola.length?S.cola.length+' cambio(s) por enviar':'');
+  const vistas=[['v-lista','Informes'],...(adm?[['v-rep','Informe mensual'],['v-cfg','Configuración']]:[])];
+  const act=document.querySelector('main section:not([hidden])').id;
+  $('#nav').innerHTML=vistas.map(([id,t])=>`<button data-v="${id}" class="${id===act?'on':''}">${t}</button>`).join('');
+  $('#lel').hidden=!adm;
+  const opt=(a)=>a.map(i=>`<option value="${i.id}">${esc(i.nombre)}</option>`).join('');
+  const fi=$('#fi').value;
+  $('#fi').innerHTML='<option value="">Todas las instituciones</option>'+opt(S.ins);$('#fi').value=fi;
+  $('#ri').innerHTML=opt(S.ins);
+  lista();cfg();
+}
+function lista(){
+  const q=$('#q').value.toLowerCase(),fi=$('#fi').value,fm=$('#fm').value,ft=$('#ft').value,fe=$('#fe').checked;
+  const pend=new Set(S.cola.map(c=>c.row.id)),adm=S.me?.es_admin;
+  const rs=S.inf.filter(r=>(fe?r.borrado:!r.borrado)&&(!fi||r.institucion_id===fi)&&(!fm||r.fecha.startsWith(fm))&&(!ft||r.tipo===ft)&&(!q||r.descripcion.toLowerCase().includes(q)));
+  $('#lista').innerHTML=rs.map(r=>`<article class="c ${r.tipo}">
+    <div class="t"><b>${r.fecha}</b><span>${esc(inom(r.institucion_id))}</span><span>${tipoTxt(r.tipo)}</span>${pend.has(r.id)?'<span class="pend">Por enviar</span>':''}${cerrado(r.fecha)?'<span class="m">Mes cerrado</span>':''}</div>
+    <p>${esc(r.descripcion)}</p>
+    <div class="m">Autor: ${esc(nom(r.autor))}${r.colaboradores.length?'. Con: '+r.colaboradores.map(c=>esc(nom(c))).join(', '):''}</div>
+    <div class="a">
+      ${r.borrado?(adm?`<button data-a="rs" data-id="${r.id}">Restaurar</button>`:''):`
+        ${puede(r)?`<button data-a="ed" data-id="${r.id}">Editar</button>`:''}
+        ${puede(r)&&(adm||r.autor===S.me.id)?`<button data-a="el" data-id="${r.id}">Eliminar</button>`:''}`}
+      ${adm?`<button data-a="hi" data-id="${r.id}">Historial</button>`:''}
+    </div></article>`).join('')||'<p class="vac">No hay informes con estos filtros. Pulsa «Nuevo informe» para añadir uno.</p>';
+}
+function cfg(){
+  if(!S.me?.es_admin)return;
+  $('#linst').innerHTML=S.ins.map(i=>`<li>${esc(i.nombre)} ${i.activa?'':'(inactiva)'} <button data-a="ti" data-id="${i.id}">${i.activa?'Desactivar':'Activar'}</button></li>`).join('');
+  $('#lmes').innerHTML=S.cer.map(m=>`<li>${m.slice(0,7)} <button data-a="am" data-id="${m}">Reabrir</button></li>`).join('')||'<li>Ningún mes cerrado.</li>';
+  $('#lusu').innerHTML=S.per.map(p=>`<li>${esc(p.nombre)}${p.es_admin?' (administrador)':''} ${p.activo?`<button data-a="bj" data-id="${p.id}">Dar de baja</button>`:`(de baja) <button data-a="al" data-id="${p.id}">Reactivar</button>`}</li>`).join('');
+}
+function ver(id){document.querySelectorAll('main section').forEach(s=>s.hidden=s.id!==id);pintar()}
+
+function abrir(r){
+  const aut=r?.autor||S.me.id;
+  $('#fid').value=r?.id||'';
+  $('#ffe').value=r?.fecha||new Date().toISOString().slice(0,10);
+  $('#fin').innerHTML=S.ins.filter(i=>i.activa||i.id===r?.institucion_id).map(i=>`<option value="${i.id}">${esc(i.nombre)}</option>`).join('');
+  if(r)$('#fin').value=r.institucion_id;
+  $('#fti').value=r?.tipo||'mantenimiento';
+  $('#fco').innerHTML=S.per.filter(p=>(p.activo||r?.colaboradores.includes(p.id))&&p.id!==aut).map(p=>`<option value="${p.id}" ${r?.colaboradores.includes(p.id)?'selected':''}>${esc(p.nombre)}</option>`).join('');
+  $('#fde').value=r?.descripcion||'';
+  $('#dlg').showModal();
+}
+$('#ff').onsubmit=e=>{
+  e.preventDefault();
+  const id=$('#fid').value,old=S.inf.find(x=>x.id===id);
+  guardar({id:id||crypto.randomUUID(),fecha:$('#ffe').value,institucion_id:$('#fin').value,tipo:$('#fti').value,
+    descripcion:$('#fde').value.trim(),colaboradores:[...$('#fco').selectedOptions].map(o=>o.value),
+    autor:old?old.autor:S.me.id,borrado:false},!old);
+  $('#dlg').close();
+};
+$('#fcan').onclick=()=>$('#dlg').close();
+$('#nuevo').onclick=()=>abrir(null);
+['q','fi','fm','ft','fe'].forEach(i=>$('#'+i).addEventListener('input',lista));
+
+// ---------- Informe mensual ----------
+$('#gen').onclick=()=>{
+  const i=$('#ri').value,m=$('#rm').value;
+  if(!i||!m)return alert('Elige una institución y un mes.');
+  const rs=S.inf.filter(r=>!r.borrado&&r.institucion_id===i&&r.fecha.startsWith(m)).sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  const mes=new Date(m+'-01T12:00').toLocaleDateString('es',{month:'long',year:'numeric'});
+  $('#rout').innerHTML=`<h2 style="margin-top:0">${esc(inom(i))}</h2><p>Trabajos realizados en ${mes}</p>`+
+    (rs.map(r=>`<div class="ri"><b>${r.fecha}</b> ${tipoTxt(r.tipo)}<p>${esc(r.descripcion)}</p></div>`).join('')||'<p>No hay trabajos registrados este mes.</p>');
+  $('#imp').hidden=false;
+};
+$('#imp').onclick=()=>print();
+
+// ---------- Acciones de lista y configuración ----------
+async function adm(p){
+  const {error}=await p;
+  if(error){let m=error.message;try{m=(await error.context.json()).error}catch{}alert(m)}
+  await cargar();
+}
+const fn=body=>sb.functions.invoke('admin-users',{body});
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.v)return ver(b.dataset.v);
+  const a=b.dataset.a,id=b.dataset.id,r=S.inf.find(x=>x.id===id);
+  if(a==='ed')abrir(r);
+  else if(a==='el'&&confirm('¿Eliminar este informe? Un administrador podrá restaurarlo.'))guardar({...r,borrado:true},false);
+  else if(a==='rs')guardar({...r,borrado:false},false);
+  else if(a==='hi'){
+    const {data,error}=await sb.from('historial').select('*').eq('informe_id',id).order('cuando',{ascending:false});
+    $('#hh').innerHTML='<h2 style="margin-top:0">Historial</h2>'+(error?'<p>Necesitas conexión para ver el historial.</p>':
+      '<ul>'+data.map(h=>`<li>${new Date(h.cuando).toLocaleString('es')}: ${h.accion} por ${esc(nom(h.usuario))}</li>`).join('')+'</ul>');
+    $('#dh').showModal();
+  }
+  else if(a==='ai'&&$('#ni').value.trim()){await adm(sb.from('instituciones').insert({nombre:$('#ni').value.trim()}));$('#ni').value=''}
+  else if(a==='ti')adm(sb.from('instituciones').update({activa:!S.ins.find(i=>i.id===id).activa}).eq('id',id));
+  else if(a==='cm'&&$('#cmes').value)adm(sb.from('meses_cerrados').insert({mes:$('#cmes').value+'-01'}));
+  else if(a==='am')adm(sb.from('meses_cerrados').delete().eq('mes',id));
+  else if(a==='cu'){
+    if($('#up').value.length<8)return alert('La contraseña debe tener al menos 8 caracteres.');
+    await adm(fn({action:'crear',nombre:$('#un').value.trim(),email:$('#ue').value.trim(),password:$('#up').value,es_admin:$('#ua').checked}));
+    ['un','ue','up'].forEach(i=>$('#'+i).value='');$('#ua').checked=false;
+  }
+  else if(a==='bj'&&confirm('¿Dar de baja a este usuario?'))adm(fn({action:'baja',id}));
+  else if(a==='al')adm(fn({action:'alta',id}));
+});
+
+// ---------- Exportar e importar ----------
+function bajar(nombre,texto,tipo){
+  const l=document.createElement('a');l.href=URL.createObjectURL(new Blob([texto],{type:tipo}));l.download=nombre;l.click();
+}
+const hoy=()=>new Date().toISOString().slice(0,10);
+$('#ejs').onclick=()=>bajar(`registro-${hoy()}.json`,JSON.stringify({instituciones:S.ins,informes:S.inf},null,1),'application/json');
+$('#ecsv').onclick=()=>{
+  const c=v=>'"'+String(v).replace(/"/g,'""')+'"';
+  const f=['Fecha','Institución','Tipo','Autor','Colaboradores','Descripción'].map(c).join(';');
+  const l=S.inf.filter(r=>!r.borrado).map(r=>[r.fecha,inom(r.institucion_id),tipoTxt(r.tipo),nom(r.autor),r.colaboradores.map(nom).join(', '),r.descripcion].map(c).join(';'));
+  bajar(`registro-${hoy()}.csv`,'\uFEFF'+[f,...l].join('\r\n'),'text/csv;charset=utf-8');
+};
+$('#imf').onchange=async e=>{
+  try{
+    const d=JSON.parse(await e.target.files[0].text());
+    if(!confirm(`Se importarán ${d.informes.length} informes. ¿Continuar?`))return;
+    let r=await sb.from('instituciones').upsert(d.instituciones||[]);if(r.error)throw r.error;
+    r=await sb.from('informes').upsert(d.informes);if(r.error)throw r.error;
+    alert('Importación terminada.');await cargar();
+  }catch(x){alert('No se pudo importar: '+(x.message||'archivo no válido'))}
+  e.target.value='';
+};
+
+// ---------- Inicio y sesión ----------
+$('#fl').onsubmit=async e=>{
+  e.preventDefault();
+  const {data,error}=await sb.auth.signInWithPassword({email:$('#lu').value,password:$('#lp').value});
+  if(error)return alert('Correo o contraseña incorrectos, o sin conexión.');
+  localStorage.uid=data.user.id;arrancar();
+};
+$('#salir').onclick=async()=>{
+  if(S.cola.length&&!confirm('Hay cambios sin enviar que se perderán. ¿Salir igualmente?'))return;
+  await sb.auth.signOut();['uid','cache','cola'].forEach(k=>localStorage.removeItem(k));location.reload();
+};
+async function arrancar(){
+  S.uid=localStorage.uid||null;
+  $('#login').hidden=!!S.uid;$('#app').hidden=!S.uid;
+  if(S.uid)await cargar();
+}
+addEventListener('online',cargar);addEventListener('offline',pintar);
+(async()=>{
+  try{const {data}=await sb.auth.getSession();if(data.session)localStorage.uid=data.session.user.id;else if(navigator.onLine)localStorage.removeItem('uid')}catch{}
+  arrancar();
+})();
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>

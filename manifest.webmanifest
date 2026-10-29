@@ -1,0 +1,17 @@
+{
+  "name": "Registro de brigadas",
+  "short_name": "Brigadas",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#EEF1F0",
+  "theme_color": "#1B2A2F",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%231B2A2F'/%3E%3Cpath d='M130 270l80 80 170-190' fill='none' stroke='%23fff' stroke-width='54' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
