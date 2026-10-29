@@ -257,7 +257,7 @@ async function adm(p){
   if(error){let m=error.message;try{m=(await error.context.json()).error}catch{}alert(m)}
   await cargar();
 }
-const fn=body=>sb.functions.invoke('admin-users',{body});
+const fn=body=>sb.functions.invoke('super-function',{body});
 document.addEventListener('click',async e=>{
   const b=e.target.closest('button');if(!b)return;
   if(b.dataset.v)return ver(b.dataset.v);
