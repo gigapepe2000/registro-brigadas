@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Registro de brigadas</title>
+<title>Registro de trabajo - COENERGY</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#1B2A2F">
 <style>
@@ -45,7 +45,7 @@ ul{padding-left:18px}li{margin:4px 0}
 </head>
 <body>
 <div id="login" hidden>
-  <h1>Registro de brigadas</h1>
+  <h1>Registro de trabajo - COENERGY</h1>
   <form id="fl">
     <label>Correo<input id="lu" type="email" autocomplete="username" required></label>
     <label>Contraseña<input id="lp" type="password" autocomplete="current-password" required></label>
@@ -56,9 +56,10 @@ ul{padding-left:18px}li{margin:4px 0}
 
 <div id="app" hidden>
 <header>
-  <h1>Registro de brigadas</h1>
+  <h1>Registro de trabajo - COENERGY</h1>
   <span id="est" class="m" style="color:#fff"></span>
   <nav id="nav"></nav>
+  <button id="ayuda" title="Ayuda" aria-label="Ayuda" style="font-weight:700">?</button>
   <button id="salir">Salir</button>
 </header>
 <main>
@@ -82,6 +83,7 @@ ul{padding-left:18px}li{margin:4px 0}
       <input id="rm" type="month">
       <button id="gen" class="p">Generar informe</button>
       <button id="imp" hidden>Imprimir o guardar PDF</button>
+      <button id="cop" hidden>Copiar texto</button>
     </div>
     <div id="rout"></div>
   </section>
@@ -101,6 +103,7 @@ ul{padding-left:18px}li{margin:4px 0}
       <button data-a="cu">Crear usuario</button>
     </div>
     <ul id="lusu"></ul>
+    <details id="dbaja" hidden><summary id="sbaja"></summary><ul id="lbaja"></ul></details>
     <h2>Importar copia</h2>
     <p class="m">Carga un archivo JSON exportado antes. Los informes con el mismo identificador se actualizan.</p>
     <input id="imf" type="file" accept=".json">
@@ -120,6 +123,11 @@ ul{padding-left:18px}li{margin:4px 0}
       <button type="button" id="fcan">Cancelar</button><button class="p">Guardar informe</button>
     </div>
   </form>
+</dialog>
+<dialog id="da">
+  <h2 style="margin-top:0">Cómo usar la página</h2>
+  <div id="ha"></div>
+  <p style="text-align:right"><button onclick="$('#da').close()">Cerrar</button></p>
 </dialog>
 <dialog id="dh"><div id="hh"></div><p style="text-align:right"><button onclick="$('#dh').close()">Cerrar</button></p></dialog>
 
@@ -212,7 +220,10 @@ function cfg(){
   if(!S.me?.es_admin)return;
   $('#linst').innerHTML=S.ins.map(i=>`<li>${esc(i.nombre)} ${i.activa?'':'(inactiva)'} <button data-a="ti" data-id="${i.id}">${i.activa?'Desactivar':'Activar'}</button></li>`).join('');
   $('#lmes').innerHTML=S.cer.map(m=>`<li>${m.slice(0,7)} <button data-a="am" data-id="${m}">Reabrir</button></li>`).join('')||'<li>Ningún mes cerrado.</li>';
-  $('#lusu').innerHTML=S.per.map(p=>`<li>${esc(p.nombre)}${p.es_admin?' (administrador)':''} ${p.activo?`<button data-a="bj" data-id="${p.id}">Dar de baja</button>`:`(de baja) <button data-a="al" data-id="${p.id}">Reactivar</button>`}</li>`).join('');
+  const act=S.per.filter(p=>p.activo),baj=S.per.filter(p=>!p.activo);
+  $('#lusu').innerHTML=act.map(p=>`<li>${esc(p.nombre)}${p.es_admin?' (administrador)':''} <button data-a="bj" data-id="${p.id}">Dar de baja</button></li>`).join('');
+  $('#dbaja').hidden=!baj.length;$('#sbaja').textContent=`Usuarios de baja (${baj.length})`;
+  $('#lbaja').innerHTML=baj.map(p=>`<li>${esc(p.nombre)} <button data-a="al" data-id="${p.id}">Reactivar</button></li>`).join('');
 }
 function ver(id){document.querySelectorAll('main section').forEach(s=>s.hidden=s.id!==id);pintar()}
 
@@ -247,9 +258,16 @@ $('#gen').onclick=()=>{
   const mes=new Date(m+'-01T12:00').toLocaleDateString('es',{month:'long',year:'numeric'});
   $('#rout').innerHTML=`<h2 style="margin-top:0">${esc(inom(i))}</h2><p>Trabajos realizados en ${mes}</p>`+
     (rs.map(r=>`<div class="ri"><b>${r.fecha}</b> ${tipoTxt(r.tipo)}<p>${esc(r.descripcion)}</p></div>`).join('')||'<p>No hay trabajos registrados este mes.</p>');
-  $('#imp').hidden=false;
+  REP=`COENERGY - ${inom(i)} - ${mes}\n`+(rs.map(r=>`${r.fecha.slice(8,10)}/${r.fecha.slice(5,7)} ${tipoTxt(r.tipo)}: ${r.descripcion.replace(/\s*\n+\s*/g,' ')}`).join('\n')||'No hay trabajos registrados este mes.');
+  $('#imp').hidden=false;$('#cop').hidden=false;
 };
+let REP='';
 $('#imp').onclick=()=>print();
+$('#cop').onclick=async()=>{
+  try{await navigator.clipboard.writeText(REP)}catch{
+    const t=document.createElement('textarea');t.value=REP;document.body.append(t);t.select();document.execCommand('copy');t.remove()}
+  $('#cop').textContent='Copiado';setTimeout(()=>$('#cop').textContent='Copiar texto',2000);
+};
 
 // ---------- Acciones de lista y configuración ----------
 async function adm(p){
@@ -306,6 +324,31 @@ $('#imf').onchange=async e=>{
   }catch(x){alert('No se pudo importar: '+(x.message||'archivo no válido'))}
   e.target.value='';
 };
+
+// ---------- Ayuda ----------
+const AYUDA=`<h3>Informes</h3><ul>
+<li><b>Nuevo informe:</b> toca «Nuevo informe», elige fecha, institución y tipo (mantenimiento o avería), marca los colaboradores y describe el trabajo.</li>
+<li><b>Colaboradores:</b> son las personas que trabajaron contigo. Podrán editar ese informe.</li>
+<li><b>Editar:</b> puedes editar los informes que escribiste o en los que eres colaborador.</li>
+<li><b>Eliminar:</b> solo el autor. Un administrador puede restaurarlo.</li>
+<li><b>Mes cerrado:</b> no se puede editar. Pide a un administrador que lo reabra.</li>
+<li><b>Buscar:</b> escribe una palabra del trabajo, o filtra por institución, mes y tipo.</li>
+<li><b>Exportar:</b> JSON sirve de copia de seguridad. CSV se abre en Excel.</li></ul>
+<h3>Sin cobertura</h3><ul>
+<li>Puedes escribir informes sin señal. Aparecen como «Por enviar» y se envían solos al volver la conexión.</li>
+<li>No cierres sesión mientras haya cambios por enviar.</li>
+<li>Inicia sesión una vez con conexión en cada móvil.</li></ul>
+<h3>Instalar en el móvil</h3><ul><li>En Chrome: ⋮ y «Añadir a pantalla de inicio».</li></ul>`;
+const AYUDA_ADM=`<h3>Administradores</h3><ul>
+<li><b>Informe mensual:</b> elige institución y mes, toca «Generar informe» y luego «Copiar texto» o «Imprimir o guardar PDF». No incluye autores.</li>
+<li><b>Instituciones:</b> en Configuración puedes añadirlas y desactivarlas.</li>
+<li><b>Meses cerrados:</b> cierra un mes para bloquear la edición a los usuarios. Puedes reabrirlo.</li>
+<li><b>Usuarios:</b> crea cuentas con una contraseña inicial. «Dar de baja» bloquea el acceso y pasa al usuario a «Usuarios de baja», donde puedes reactivarlo.</li>
+<li><b>Historial:</b> el botón «Historial» de cada informe muestra quién lo creó, editó o eliminó.</li>
+<li><b>Eliminados:</b> marca «Ver eliminados» para restaurarlos.</li>
+<li><b>Importar copia:</b> en Configuración, con un JSON exportado antes.</li>
+<li><b>Copia de seguridad:</b> exporta el JSON una vez al mes y guárdalo.</li></ul>`;
+$('#ayuda').onclick=()=>{$('#ha').innerHTML=AYUDA+(S.me?.es_admin?AYUDA_ADM:'');$('#da').showModal()};
 
 // ---------- Inicio y sesión ----------
 $('#fl').onsubmit=async e=>{
